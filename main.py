@@ -1,3355 +1,854 @@
-import discord 
-import io
+import discord
 import os
 import PIL
 import random
-import requests
 from discord.ext import commands
 from io import BytesIO
 from keep_alive import keep_alive
-from PIL import Image,ImageFont, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from replit import db
 
-
-#setting up the bot
+# setting up the bot
 intents = discord.Intents.all()
 intents.members = True
 bot = commands.Bot(command_prefix='$', intents=intents, help_command=None)
 
-#backup (last backup = 28 Nov 2021)
-#db["backup"]
+# need to create database if it does not exist
+# db["gemstone"] = {}
+# db["item"] = {}
 
-#resetting gemstones database
-#db["gems"] = []
-
-#resetting items database
-#db["items"] = []
-
-#resetting token database
-#db["token"] = []
-
-#updating items database
-def update_itemsdatabase(user, item):
-  new = [user]
-  if "items" in db.keys():
-    items = db["items"]
-    position = 0
-    added_user = 0
-    for x in items:
-      if x[0] == user:
-        items[position].append(item)
-        added_user = 1
-        break
-      position = position + 1
-    if added_user == 0:
-      items.append(new)
-      items[-1].append(item)
-    db["items"] = items
-
-#updating token database
-def update_tokendatabase(user, value):
-  new = [user, 0]
-  if "token" in db.keys():
-    token = db["token"]
-    position = 0
-    added_user = 0
-    for x in token:
-      if x[0] == user:
-        token[position][1] = token[position][1] + value
-        added_user = 1
-        break
-      position = position + 1
-    if added_user == 0:
-      token.append(new)
-      token[-1][1] = token[-1][1] + value
-    db["token"] = token
-
-#extract gem data of user
-def find_user_gems(user):
-  wanteduser = []
-  gems = db["gems"]
-  for x in gems:
-    if x[0] == user:
-      wanteduser = x
-      break
-  return wanteduser
-
-#extract items data of user
-def find_user_items(user):
-  wanteduser = []
-  items = db["items"]
-  for x in items:
-    if x[0] == user:
-      wanteduser = x
-      break
-  return wanteduser
-
-#upgradecost command
-@bot.command(name='upgradecost')
-async def upgradecost(ctx, arg=None):
-  if ctx.channel.name == "bot_commands":
-    if arg == None:
-      embed = discord.Embed(
-        title="Missing Argument!", 
-        description="**Try:** $upgradecost (*specific_pickaxe*)\n**Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC*\nThe additional percentage would be a multiple of the base percentage + base pickaxe percentage.\nFor example: Equipping a GOOD-PX-IR would increase your iron chance from 0.25 to 0.25x2x1.5 = 0.75, where maximum chance is 1.", 
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-IR":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-IR", 
-        description="Good [+50%]: 20 Iron\nProper [+60%]: 25 Iron\nDecent [+70%]: 33 Iron\nStrong [+80%]: 40 Iron\nPolished [+90%]: 50 Iron\nRefined [+100%]: 200 Iron",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-GO":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-GO", 
-        description="Good [+50%]: 10 Gold\nProper [+60%]: 12 Gold\nDecent [+70%]: 16 Gold\nStrong [+80%]: 20 Gold\nPolished [+90%]: 25 Gold\nRefined [+100%]: 100 Gold",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-DI":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-DI", 
-        description="Good [+50%]: 10 Diamond\nProper [+60%]: 12 Diamond\nDecent [+70%]: 16 Diamond\nStrong [+80%]: 20 Diamond\nPolished [+90%]: 25 Diamond\nRefined [+100%]: 100 Diamond",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-EM":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-EM", 
-        description="Good [+50%]: 6 Emerald\nProper [+60%]: 8 Emerald\nDecent [+70%]: 12 Emerald\nStrong [+80%]: 15 Emerald\nPolished [+90%]: 18 Emerald\nRefined [+100%]: 75 Emerald",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-SA":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-SA", 
-        description="Good [+50%]: 4 Sapphire\nProper [+60%]: 5 Sapphire\nDecent [+70%]: 6 Sapphire\nStrong [+80%]: 8 Sapphire\nPolished [+90%]: 10 Sapphire\nRefined [+100%]: 40 Sapphire",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-RU":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-RU", 
-        description="Good [+50%]: 125 Iron\nProper [+60%]: 150 Iron\nDecent [+70%]: 200 Iron\nStrong [+80%]: 250 Iron\nPolished [+90%]: 300 Iron\nRefined [+100%]: 1250 Iron",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-JA":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-JA", 
-        description="Good [+50%]: 200 Iron\nProper [+60%]: 250 Iron\nDecent [+70%]: 333 Iron\nStrong [+80%]: 400 Iron\nPolished [+90%]: 500 Iron\nRefined [+100%]: 2000 Iron",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-OP":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-OP", 
-        description="Good [+50%]: 100 Gold\nProper [+60%]: 125 Gold\nDecent [+70%]: 166 Gold\nStrong [+80%]: 200 Gold\nPolished [+90%]: 250 Gold\nRefined [+100%]: 1000 Gold\nPerfect [+200%]: 10 Opal",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-AM":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-AM", 
-        description="Good [+50%]: 200 Gold\nProper [+60%]: 250 Gold\nDecent [+70%]: 333 Gold\nStrong [+80%]: 400 Gold\nPolished [+90%]: 500 Gold\nRefined [+100%]: 2000 Gold\nPerfect [+200%]: 10 Amethyst",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-TO":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-TO", 
-        description="Good [+50%]: 125 Diamond\nProper [+60%]: 155 Diamond\nDecent [+70%]: 208 Diamond\nStrong [+80%]: 250 Diamond\nPolished [+90%]: 312 Diamond\nRefined [+100%]: 1250 Diamond\nPerfect [+200%]: 6 Topaz",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-ON":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-ON", 
-        description="Good [+50%]: 250 Diamond\nProper [+60%]: 312 Diamond\nDecent [+70%]: 416 Diamond\nStrong [+80%]: 500 Diamond\nPolished [+90%]: 625 Diamond\nRefined [+100%]: 2500 Diamond\nPerfect [+200%]: 5 Onyx",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == "PX-IC":
-      embed = discord.Embed(
-        title="Upgrade Costs for PX-IC", 
-        description="Good [+50%]: 250 Emerald\nProper [+60%]: 312 Emerald\nDecent [+70%]: 416 Emerald\nStrong [+80%]: 200 Sapphire\nPolished [+90%]: 250 Sapphire\nRefined [+100%]: 1000 Sapphire\nPerfect [+200%]: 1 Invisible Crystal",
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    else:
-      embed = discord.Embed(
-        title="Invalid Argument!", 
-        description="**Try:** $upgradecost (*specific_pickaxe*)\n**Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC*\nThe additional percentage would be a multiple of the base percentage + base pickaxe percentage.\nFor example: Equipping a GOOD-PX-IR would increase your iron chance from 0.25 to 0.25x2x1.5 = 0.75, where maximum chance is 1.", 
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-
-#upgrade command
-@bot.command(name='upgrade')
-async def upgrade(ctx, arg=None):
-  user = ctx.author.id
-  usergems = []
-  itemslist = []
-  itemslist = find_user_items(user)
-  usergems = find_user_gems(user)
-  if ctx.channel.name == "bot_commands":
-    if arg == None:
-      embed = discord.Embed(
-        title="Missing Argument!", 
-        description="**Try:** $upgrade (*specific_pickaxe*)\n*Please check your inventory for available pickaxes to upgrade using $inv.*", 
-        color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif arg == ctx.author.id:
-      await ctx.channel.send("**You do not have this item!**")
-    elif itemslist == []:
-      await ctx.channel.send("**You do not have this item!**")
-    elif arg in itemslist and "PX-" in arg:
-      if "PX-IR" in arg:
-        if "PX-IR" == arg:
-          if usergems[12] >= 20:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 20
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "GOOD-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your PX-IR to GOOD-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[12] >= 25:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 25
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "PROPER-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-IR to PROPER-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[12] >= 33:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 33
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "DECENT-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-IR to DECENT-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[12] >= 40:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 40
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "STRONG-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-IR to STRONG-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[12] >= 50:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 50
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "POLISHED-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-IR to POLISHED-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**") 
-        elif "POLISHED" in arg:
-          if usergems[12] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IR" in str(y):
-                    x[counter] = "REFINED-PX-IR"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-IR to REFINED-PX-IR! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-            await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")
-      if "PX-GO" in arg:
-        if "PX-GO" == arg:
-          if usergems[11] >= 10:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 10
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "GOOD-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your PX-GO to GOOD-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[11] >= 12:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 12
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "PROPER-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-GO to PROPER-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")    
-        elif "PROPER" in arg:
-          if usergems[11] >= 16:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 16
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "DECENT-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-GO to DECENT-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")     
-        elif "DECENT" in arg:
-          if usergems[11] >= 20:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 20
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "STRONG-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-GO to STRONG-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[11] >= 25:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 25
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "POLISHED-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-GO to POLISHED-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[11] >= 100:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 100
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-GO" in str(y):
-                    x[counter] = "REFINED-PX-GO"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-GO to REFINED-PX-GO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")
-      if "PX-DI" in arg:
-        if "PX-DI" == arg:
-          if usergems[10] >= 10:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 10
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "GOOD-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your PX-DI to GOOD-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[10] >= 12:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 12
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "PROPER-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-DI to PROPER-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[10] >= 16:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 16
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "DECENT-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-DI to DECENT-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[10] >= 20:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 20
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "STRONG-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-DI to STRONG-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[10] >= 25:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 25
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "POLISHED-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-DI to POLISHED-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[10] >= 100:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 100
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-DI" in str(y):
-                    x[counter] = "REFINED-PX-DI"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-DI to REFINED-PX-DI! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")
-      if "PX-EM" in arg:
-        if "PX-EM" == arg:
-          if usergems[9] >= 6:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 6
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "GOOD-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your PX-EM to GOOD-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[9] >= 8:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 8
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "PROPER-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-EM to PROPER-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[9] >= 12:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 12
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "DECENT-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-EM to DECENT-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[9] >= 15:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 15
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "STRONG-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-EM to STRONG-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[9] >= 18:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 18
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "POLISHED-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-EM to POLISHED-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[9] >= 75:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 75
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-EM" in str(y):
-                    x[counter] = "REFINED-PX-EM"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-EM to REFINED-PX-EM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")
-      if "PX-SA" in arg:
-        if "PX-SA" == arg:
-          if usergems[8] >= 4:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 4
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "GOOD-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your PX-SA to GOOD-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[8] >= 5:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 5
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "PROPER-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-SA to PROPER-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[8] >= 6:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 6
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "DECENT-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-SA to DECENT-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[8] >= 8:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 8
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "STRONG-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-SA to STRONG-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[8] >= 10:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 10
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "POLISHED-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-SA to POLISHED-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[8] >= 40:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 40
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-SA" in str(y):
-                    x[counter] = "REFINED-PX-SA"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-SA to REFINED-PX-SA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")
-      if "PX-RU" in arg:
-        if "PX-RU" == arg:
-          if usergems[12] >= 125:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 125
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "GOOD-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your PX-RU to GOOD-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[12] >= 150:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 150
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "PROPER-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-RU to PROPER-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[12] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "DECENT-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-RU to DECENT-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[12] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "STRONG-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-RU to STRONG-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[12] >= 300:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 300
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "POLISHED-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-RU to POLISHED-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[12] >= 1250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 1250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-RU" in str(y):
-                    x[counter] = "REFINED-PX-RU"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-RU to REFINED-PX-RU! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**") 
-      if "PX-JA" in arg:
-        if "PX-JA" == arg:
-          if usergems[12] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "GOOD-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your PX-JA to GOOD-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[12] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "PROPER-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-JA to PROPER-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[12] >= 333:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 333
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "DECENT-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-JA to DECENT-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[12] >= 400:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 400
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "STRONG-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-JA to STRONG-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[12] >= 500:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 500
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "POLISHED-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-JA to POLISHED-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[12] >= 2000:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[12] = x[12] - 2000
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-JA" in str(y):
-                    x[counter] = "REFINED-PX-JA"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-JA to REFINED-PX-JA! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**") 
-      if "PX-OP" in arg:
-        if "PX-OP" == arg:
-          if usergems[11] >= 100:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 100
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "GOOD-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your PX-OP to GOOD-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[11] >= 125:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 125
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "PROPER-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-OP to PROPER-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[11] >= 166:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 166
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "DECENT-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-OP to DECENT-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[11] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "STRONG-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-OP to STRONG-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[11] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "POLISHED-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-OP to POLISHED-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[11] >= 1000:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 1000
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "REFINED-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-OP to REFINED-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "REFINED" in arg:
-          if usergems[5] >= 10:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[5] = x[5] - 10
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-OP" in str(y):
-                    x[counter] = "PERFECT-PX-OP"
-                    await ctx.channel.send("**Successfully upgraded your REFINED-PX-OP to PERFECT-PX-OP! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**") 
-      if "PX-AM" in arg:
-        if "PX-AM" == arg:
-          if usergems[11] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "GOOD-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your PX-AM to GOOD-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[11] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "PROPER-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-AM to PROPER-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[11] >= 333:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 333
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "DECENT-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-AM to DECENT-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[11] >= 400:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 400
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "STRONG-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-AM to STRONG-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[11] >= 500:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 500
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "POLISHED-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-AM to POLISHED-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[11] >= 2000:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[11] = x[11] - 2000
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "REFINED-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-AM to REFINED-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "REFINED" in arg:
-          if usergems[4] >= 10:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[4] = x[4] - 10
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-AM" in str(y):
-                    x[counter] = "PERFECT-PX-AM"
-                    await ctx.channel.send("**Successfully upgraded your REFINED-PX-AM to PERFECT-PX-AM! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")  
-      if "PX-TO" in arg:
-        if "PX-TO" == arg:
-          if usergems[10] >= 125:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 125
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "GOOD-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your PX-TO to GOOD-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[10] >= 155:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 155
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "PROPER-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-TO to PROPER-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[10] >= 208:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 208
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "DECENT-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-TO to DECENT-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-
-        elif "DECENT" in arg:
-          if usergems[10] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "STRONG-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-TO to STRONG-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[10] >= 312:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 312
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "POLISHED-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-TO to POLISHED-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[10] >= 1250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 1250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "REFINED-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-TO to REFINED-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "REFINED" in arg:
-          if usergems[3] >= 6:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[3] = x[3] - 6
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-TO" in str(y):
-                    x[counter] = "PERFECT-PX-TO"
-                    await ctx.channel.send("**Successfully upgraded your REFINED-PX-TO to PERFECT-PX-TO! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**") 
-      if "PX-ON" in arg:
-        if "PX-ON" == arg:
-          if usergems[10] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "GOOD-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your PX-ON to GOOD-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[10] >= 312:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 312
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "PROPER-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-ON to PROPER-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[10] >= 416:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 416
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "DECENT-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-ON to DECENT-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[10] >= 500:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 500
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "STRONG-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-ON to STRONG-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[10] >= 625:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 625
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "POLISHED-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-ON to POLISHED-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[10] >= 2500:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[10] = x[10] - 2500
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "REFINED-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-ON to REFINED-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "REFINED" in arg:
-          if usergems[2] >= 5:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[2] = x[2] - 5
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-ON" in str(y):
-                    x[counter] = "PERFECT-PX-ON"
-                    await ctx.channel.send("**Successfully upgraded your REFINED-PX-ON to PERFECT-PX-ON! **")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else: 
-          await ctx.channel.send("**You have maxed out this item!**")   
-      if "PX-IC" in arg:
-        if "PX-IC" == arg:
-          if usergems[9] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "GOOD-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your PX-IC to GOOD-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "GOOD" in arg:
-          if usergems[9] >= 312:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 312
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "PROPER-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your GOOD-PX-IC to PROPER-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "PROPER" in arg:
-          if usergems[9] >= 416:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[9] = x[9] - 416
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "DECENT-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your PROPER-PX-IC to DECENT-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "DECENT" in arg:
-          if usergems[8] >= 200:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 200
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "STRONG-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your DECENT-PX-IC to STRONG-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "STRONG" in arg:
-          if usergems[8] >= 250:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 250
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "POLISHED-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your STRONG-PX-IC to POLISHED-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "POLISHED" in arg:
-          if usergems[8] >= 1000:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[8] = x[8] - 1000
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "REFINED-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your POLISHED-PX-IC to REFINED-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        elif "REFINED" in arg:
-          if usergems[1] >= 1:
-            for x in db["gems"]:
-              if x[0] == user:
-                x[1] = x[1] - 1
-                break
-            for x in db["items"]:
-              if x[0] == user:
-                counter = 0
-                for y in x:
-                  if "PX-IC" in str(y):
-                    x[counter] = "PERFECT-PX-IC"
-                    await ctx.channel.send("**Successfully upgraded your REFINED-PX-IC to PERFECT-PX-IC!**")
-                    break
-                  else:
-                    counter = counter + 1
-                break
-          else:
-             await ctx.channel.send("**You do not have enough gems to upgrade this item!**")
-        else:
-          await ctx.channel.send("**You have maxed out this item!**")   
-    else:
-      await ctx.channel.send("**You either do not have this item or you cannot upgrade it!**")
-
-#buy command
-@bot.command(name='buy')
-async def buy(ctx, arg=None):
-  user = int(ctx.author.id)
-  usergems = []
-  useritems = []
-  if ctx.channel.name == "bot_commands":
-    usergems = find_user_gems(user)
-    useritems = find_user_items(user)
-    #if no argument for buy provided
-    if arg == None:
-      embed = discord.Embed(
-      title="Missing Argument!", 
-      description="**Try:** $buy (*specific_item*) \n **Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC, PX-A, PX-X2, PX-1, PX-T*", 
-      color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    #if argument is an item
-    elif arg == "PX-IR":
-      if useritems == []:
-        if usergems[12] >= 200:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[12] = x[12] - 200
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-IR" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-IR" not in str(x) and str(x) == useritems[-1]:
-            if usergems[12] >= 200:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[12] = x[12] - 200
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-GO":
-      if useritems == []:
-        if usergems[11] >= 100:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[11] = x[11] - 100
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-GO" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-GO" not in str(x) and str(x) == useritems[-1]:
-            if usergems[11] >= 100:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[11] = x[11] - 100
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-DI":
-      if useritems == []:
-        if usergems[10] >= 100:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[10] = x[10] - 100
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-DI" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-DI" not in str(x) and str(x) == useritems[-1]:
-            if usergems[10] >= 100:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[10] = x[10] - 100
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-EM":
-      if useritems == []:
-        if usergems[9] >= 60 and usergems[12] >= 150:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[9] = x[9] - 60
-              x[12] = x[12] -150
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-EM" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-EM" not in str(x) and str(x) == useritems[-1]:
-            if usergems[9] >= 60 and usergems[12] >= 150:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[9] = x[9] - 60
-                  x[12] = x[12] -150
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-SA":
-      if useritems == []:
-        if usergems[8] >= 30 and usergems[12] >= 250:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[8] = x[8] - 30
-              x[12] = x[12] - 250
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-SA" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-SA" not in str(x) and str(x) == useritems[-1]:
-            if usergems[8] >= 30 and usergems[12] >= 250:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[8] = x[8] - 30
-                  x[12] = x[12] - 250
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-RU":
-      if useritems == []:
-        if usergems[7] >= 20 and usergems[12] >= 250:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[7] = x[7] - 20
-              x[12] = x[12] - 250
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-RU" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-RU" not in str(x) and str(x) == useritems[-1]:
-            if usergems[7] >= 20 and usergems[12] >= 250:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[7] = x[7] - 20
-                  x[12] = x[12] - 250
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-JA":
-      if useritems == []:
-        if usergems[6] >= 15 and usergems[12] >= 500:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[6] = x[6] - 15
-              x[12] = x[12] - 500
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-JA" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-JA" not in str(x) and str(x) == useritems[-1]:
-            if usergems[6] >= 15 and usergems[12] >= 500:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[6] = x[6] - 15
-                  x[12] = x[12] - 500
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-OP":
-      if useritems == []:
-        if usergems[5] >= 5 and usergems[12] >= 1250:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[5] = x[5] - 5
-              x[12] = x[12] - 1250
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-OR" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-OP" not in str(x) and str(x) == useritems[-1]:
-            if usergems[5] >= 5 and usergems[12] >= 1250:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[5] = x[5] - 5
-                  x[12] = x[12] - 1250
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-AM":
-      if useritems == []:
-        if usergems[4] >= 5 and usergems[11] >= 1000:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[4] = x[4] - 5
-              x[11] = x[11] - 1000
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-AM" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-AM" not in str(x) and str(x) == useritems[-1]:
-            if usergems[4] >= 5 and usergems[11] >= 1000:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[4] = x[4] - 5
-                  x[11] = x[11] - 1000
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-TO":
-      if useritems == []:
-        if usergems[8] >= 150 and usergems[9] >= 100 and usergems[10] >= 300:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[8] = x[8] - 150
-              x[9] = x[9] - 100
-              x[10] = x[10] - 300
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-TO" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-TO" not in str(x) and str(x) == useritems[-1]:
-            if usergems[8] >= 150 and usergems[9] >= 100 and usergems[10] >= 300:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[8] = x[8] - 150
-                  x[9] = x[9] - 100
-                  x[10] = x[10] - 300
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-ON":
-      if useritems == []:
-        if usergems[5] >= 20 and usergems[6] >= 25 and usergems[7] >= 50:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[5] = x[5] - 20
-              x[6] = x[6] - 25
-              x[7] = x[7] - 50
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-ON" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-ON" not in str(x) and str(x) == useritems[-1]:
-            if usergems[5] >= 20 and usergems[6] >= 25 and usergems[7] >= 50:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[5] = x[5] - 20
-                  x[6] = x[6] - 25
-                  x[7] = x[7] - 50
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-IC":
-      if useritems == []:
-        if usergems[2] >= 5 and usergems[3] >= 10 and usergems[4] >= 5:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[2] = x[2] - 5
-              x[3] = x[3] - 10
-              x[4] = x[4] - 5
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-IC" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-IC" not in str(x) and str(x) == useritems[-1]:
-            if usergems[2] >= 5 and usergems[3] >= 10 and usergems[4] >= 5:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[2] = x[2] - 5
-                  x[3] = x[3] - 10
-                  x[4] = x[4] - 5
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-A" or arg == "PX-X2":
-      if useritems == []:
-        if usergems[1] >= 1 and usergems[2] >= 1 and usergems[3] >= 1 and usergems[4] >= 1 and usergems[5] >= 1 and usergems[6] >= 1 and usergems[7] >= 1 and usergems[8] >= 1 and usergems[9] >= 1 and usergems[10] >= 1 and usergems[11] >= 1 and usergems[12] >= 1:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[1] = x[1] - 1
-              x[2] = x[2] - 1
-              x[3] = x[3] - 1
-              x[4] = x[4] - 1
-              x[5] = x[5] - 1
-              x[6] = x[6] - 1
-              x[7] = x[7] - 1
-              x[8] = x[8] - 1
-              x[9] = x[9] - 1
-              x[10] = x[10] - 1
-              x[11] = x[11] - 1
-              x[12] = x[12] - 1
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if arg in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if arg not in str(x) and str(x) == useritems[-1]:
-            if usergems[1] >= 1 and usergems[2] >= 1 and usergems[3] >= 1 and usergems[4] >= 1 and usergems[5] >= 1 and usergems[6] >= 1 and usergems[7] >= 1 and usergems[8] >= 1 and usergems[9] >= 1 and usergems[10] >= 1 and usergems[11] >= 1 and usergems[12] >= 1:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[1] = x[1] - 1
-                  x[2] = x[2] - 1
-                  x[3] = x[3] - 1
-                  x[4] = x[4] - 1
-                  x[5] = x[5] - 1
-                  x[6] = x[6] - 1
-                  x[7] = x[7] - 1
-                  x[8] = x[8] - 1
-                  x[9] = x[9] - 1
-                  x[10] = x[10] - 1
-                  x[11] = x[11] - 1
-                  x[12] = x[12] - 1
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-1":
-      if useritems == []:
-        if usergems[1] >= 1 and usergems[2] >= 1 and usergems[3] >= 1 and usergems[4] >= 1 and usergems[5] >= 1 and usergems[6] >= 1 and usergems[7] >= 1 and usergems[8] >= 1 and usergems[9] >= 1 and usergems[10] >= 1 and usergems[11] >= 1 and usergems[12] >= 1:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[1] = x[1] - 1
-              x[2] = x[2] - 1
-              x[3] = x[3] - 1
-              x[4] = x[4] - 1
-              x[5] = x[5] - 1
-              x[6] = x[6] - 1
-              x[7] = x[7] - 1
-              x[8] = x[8] - 1
-              x[9] = x[9] - 1
-              x[10] = x[10] - 1
-              x[11] = x[11] - 1
-              x[12] = x[12] - 1
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item! Please remember to use $setgem to set the gem for the pickaxe to mine only.**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-1" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-1" not in str(x) and str(x) == useritems[-1]:
-            if usergems[1] >= 1 and usergems[2] >= 1 and usergems[3] >= 1 and usergems[4] >= 1 and usergems[5] >= 1 and usergems[6] >= 1 and usergems[7] >= 1 and usergems[8] >= 1 and usergems[9] >= 1 and usergems[10] >= 1 and usergems[11] >= 1 and usergems[12] >= 1:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[1] = x[1] - 1
-                  x[2] = x[2] - 1
-                  x[3] = x[3] - 1
-                  x[4] = x[4] - 1
-                  x[5] = x[5] - 1
-                  x[6] = x[6] - 1
-                  x[7] = x[7] - 1
-                  x[8] = x[8] - 1
-                  x[9] = x[9] - 1
-                  x[10] = x[10] - 1
-                  x[11] = x[11] - 1
-                  x[12] = x[12] - 1
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item! Please remember to use $setgem to set the gem for the pickaxe to mine only.**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    elif arg == "PX-T":
-      if useritems == []:
-        if usergems[1] >= 1:
-          for x in db["gems"]:
-            if x[0] == user:
-              x[1] = x[1] - 1
-              break
-          update_itemsdatabase(user, arg)
-          await ctx.channel.send("**You have successfully bought the item!**")
-        else: 
-          await ctx.channel.send("**You do not have enough gems to buy this item!**")
-      else:
-        for x in useritems:
-          if "PX-T" in str(x):
-            await ctx.channel.send("**You already have this item!**")
-            break
-          if "PX-T" not in str(x) and str(x) == useritems[-1]:
-            if usergems[1] >= 1:
-              for x in db["gems"]:
-                if x[0] == user:
-                  x[1] = x[1] - 1
-                  break
-              update_itemsdatabase(user, arg)
-              await ctx.channel.send("**You have successfully bought the item!**")
-            else: 
-              await ctx.channel.send("**You do not have enough gems to buy this item!**")
-    #wrong buy argument
-    else:
-      embed = discord.Embed(
-      title="Invalid Argument!", 
-      description="**Try:** $buy (*specific_item*) \n **Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC, PX-A, PX-X2, PX-1, PX-T*", 
-      color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-
-#inventory with everything a user owns
-@bot.command()
-async def inv(ctx, member: discord.Member = None):
-  if member == None:
-    user = int(ctx.author.id)
-    member = ctx.author
+# update gemstone database
+def update_gemstone_database(user, index, amount):
+  # each index represents amount of a specific gem
+  new_gemstone_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  if user in db["gemstone"].keys():
+    db["gemstone"][user][index] += amount
   else:
-    user = member.id
-  items = db["items"]
-  inventory = []
-  for x in items:
-    if x[0] == user:
-      inventory = x
-  if ctx.channel.name == "bot_commands":
-    string = ""
-    counter = 0
-    for x in inventory:
-      if counter != 0:
-        string = string + x + "\n"
-      else:
-        counter = counter + 1
-    tokencount = 0
-    for a in db["token"]:
-      if a[0] == user:
-        tokencount = a[1]
-    embed = discord.Embed(
-    title=f"{member}'s Inventory:", 
-    description=f"*This list shows everything you currently own! The first item is your equipped item.*\n**Tokens: {tokencount}**\n{string}", 
-    color=discord.Color.red()
-  )
-    embed.set_thumbnail(url=member.avatar)  
-    embed.set_image(url="attachment://image.png")
-    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-    await ctx.send(embed=embed)
+    db["gemstone"][user] = new_gemstone_list
+    db["gemstone"][user][index] += amount
+      
+# update item database
+def update_item_database(user, item):
+  if user in db["item"]:
+    db["item"][user].append(item)
+  else:
+    db["item"][user] = [item]
 
-#setting gem for PX-1
-@bot.command()
-async def setgem(ctx, gem=None):
-  if ctx.channel.name == "bot_commands":
-    itemlist = []
-    itemlist = find_user_items(ctx.author.id)
-    if itemlist == []:
-      await ctx.channel.send("**You do not have PX-1 and cannot set a gem for it to mine!**")
-    else:
-      have_item = False
-      for a in itemlist:
-        if "PX-1" in str(a):
-          have_item = True
-      if have_item == False:
-        await ctx.channel.send("**You do not have PX-1 and cannot set a gem for it to mine!**")
-      if have_item == True:
-        if gem == None:
-          embed = discord.Embed(
-          title="Missing Argument!", 
-          description="**Try:** $setgem (*specific_gem*) \n **Arguments:** *iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*", 
-          color=discord.Color.red()
-          )
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(embed=embed)
-        elif gem == "iron":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1A"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only iron! It has been renamed to PX-1A!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "gold":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1B"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only gold! It has been renamed to PX-1B!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "diamond":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1C"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only diamond! It has been renamed to PX-1C!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "emerald":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1D"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only emerald! It has been renamed to PX-1D!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "sapphire":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1E"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only sapphire! It has been renamed to PX-1E!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "ruby":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1F"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only ruby! It has been renamed to PX-1F!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "jade":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1G"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only jade! It has been renamed to PX-1G!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "opal":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1H"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only opal! It has been renamed to PX-1H!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "amethyst":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1I"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only amethyst! It has been renamed to PX-1I!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "topaz":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1J"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only topaz! It has been renamed to PX-1J!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "onyx":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1K"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only onyx! It has been renamed to PX-1K!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        elif gem == "ic":
-          for x in db["items"]:
-            if x[0] == ctx.author.id:
-              counter = 0
-              for y in x:
-                if "PX-1" in str(y):
-                  x[counter] = "PX-1L"
-                  await ctx.channel.send("**Successfully set PX-1 to mine only Invisible Crystal! It has been renamed to PX-1L!**")
-                  break
-                else:
-                  counter = counter + 1
-              break
-        else:
-          embed = discord.Embed(
-          title="Invalid Argument!", 
-          description="**Try:** $setgem (*specific_gem*) \n **Arguments:** *iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*", 
-          color=discord.Color.red()
-          )
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(embed=embed)
-  
-#equipping an item
-@bot.command()
-async def equip(ctx, item=None):
-  if ctx.channel.name == "bot_commands":
-    itemlist = []
-    itemlist = find_user_items(ctx.author.id)
-    if item == None:
-      embed = discord.Embed(
-      title="Missing Argument!", 
-      description="**Try:** $equip (*specific_item*) \n *Please check your inventory for available items to equip using $inv.*", 
-      color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    elif itemlist == []:
-      await ctx.channel.send("**You do not have this item!**")
-    elif item == ctx.author.id:
-      await ctx.channel.send("**You do not have this item!**")
-    elif "PX-" in item and item in itemlist:
-      position = 1
-      position = itemlist.index(item)
-      temp1 = ""
-      temp2 = ""
-      if item in itemlist:
-        for x in db["items"]:
-          if x[0] == ctx.author.id:
-            temp1 = x[position]
-            temp2 = x[1]
-            x[1] = temp1
-            x[position] = temp2
-            break
-        await ctx.channel.send("**You have successfully equipped this item!**")
-    else:
-      await ctx.channel.send("**You either do not have this item or you cannot equip it!**")
-
-#updating gemstones database
-def update_database(user, point):
-  new = [user, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  if "gems" in db.keys():
-    gems = db["gems"]
-    position = 0
-    added_user = 0
-    for x in gems:
-      if x[0] == user:
-        gems[position][point] = gems[position][point] + 1
-        added_user = 1
-        break
-      position = position + 1
-    if added_user == 0:
-      gems.append(new)
-      gems[-1][point] = gems[-1][point] + 1
-    db["gems"] = gems
-
-#taking data from gemstone database and forming a temporary leaderboard
-def leaderboard():
-  my_dict = {"ID":[],"IC":[],"Onyx":[],"Topaz":[],"Amethyst":[],"Opal":[],"Jade":[],"Ruby":[],"Sapphire":[],"Emerald":[],"Diamond":[],"Gold":[],"Iron":[]};
-  database = []
-  if "gems" in db.keys():
-    database = db["gems"]
-  tempdatabase = []
-  for x in database:
-    my_dict["ID"].append(x[0])
-    my_dict["IC"].append(x[1])
-    my_dict["Onyx"].append(x[2])
-    my_dict["Topaz"].append(x[3])
-    my_dict["Amethyst"].append(x[4])
-    my_dict["Opal"].append(x[5])
-    my_dict["Jade"].append(x[6])
-    my_dict["Ruby"].append(x[7])
-    my_dict["Sapphire"].append(x[8])
-    my_dict["Emerald"].append(x[9])
-    my_dict["Diamond"].append(x[10])
-    my_dict["Gold"].append(x[11])
-    my_dict["Iron"].append(x[12])
-    tempdatabase.append(my_dict)
-    my_dict = {"ID":[],"IC":[],"Onyx":[],"Topaz":[],"Amethyst":[],"Opal":[],"Jade":[],"Ruby":[],"Sapphire":[],"Emerald":[],"Diamond":[],"Gold":[],"Iron":[]};
-  return tempdatabase
-
-#all possible commands listed in $help
+# help command that shows all possible commands
 @bot.command()
 async def help(ctx):
-  if ctx.channel.name == "bot_commands":
+  embed = discord.Embed(
+      title="Commands List:",
+      description=
+      "**Prefix ($):** *buy, equip, gems, inv, items, items_pricing, lb, profile, set_gem, upgrade, upgrade_cost*",
+      color=discord.Color.red())
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(embed=embed)
+    
+# spawn a certain amount of a certain type of gem for the specified user
+@bot.command(name='spawn')
+async def spawn(ctx, member: discord.Member=None, index=None, amount=None):
+  # private command is only accessible by set user id 
+  if ctx.author.id != 315107540138721280:
+    await ctx.channel.send("**You cannot use this command!**")
+  else:
+    update_gemstone_database(str(member.id), int(index), int(amount))
+
+# buy a pickaxe using gems
+@bot.command(name='buy')
+async def buy(ctx, item=None):
+  # key = name of pickaxe, value = list of tuples, where each tuple contains the index of the gem required and the amount of it that will be spent
+  pickaxe = {
+      "PX-IR": [(11, 200)],
+      "PX-GO": [(10, 100)],
+      "PX-DI": [(9, 100)],
+      "PX-EM": [(8, 60), (11, 150)],
+      "PX-SA": [(7, 30), (11, 250)],
+      "PX-RU": [(6, 20), (11, 250)],
+      "PX-JA": [(5, 15), (11, 500)],
+      "PX-OP": [(4, 5), (11, 1250)],
+      "PX-AM": [(3, 5), (10, 1000)],
+      "PX-TO": [(7, 150), (8, 100), (9, 300)],
+      "PX-ON": [(4, 20), (5, 25), (6, 50)],
+      "PX-IC": [(1, 5), (2, 10), (3, 5)],
+      "PX-A": [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), 
+               (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1)],
+      "PX-X2": [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), 
+                (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1)],
+      "PX-1": [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), 
+               (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1)],
+      "PX-T": [(0, 1)]
+  }
+  
+  if item not in pickaxe.keys():
     embed = discord.Embed(
-      title="Command List:", 
-      description="**Prefix ($):** *buy, equip, gem, inv, items, lb, price, profile, setgem, upgrade, upgradecost*", 
-      color=discord.Color.red()
-      )
+        title="Missing or Invalid Argument!",
+        description=
+        "**Try:** $buy (*specific_item*) \n **Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC, PX-A, PX-X2, PX-1, PX-T*",
+        color=discord.Color.red())
     embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
     await ctx.send(embed=embed)
+    return
 
-#all possible items
+  # get user relevant information from database
+  user = str(ctx.author.id)
+  user_items, user_gems = [], []
+  if user in db["gemstone"].keys():
+    user_gems = db["gemstone"][user]
+  if user in db["item"].keys():
+    user_items = db["item"][user]
+
+  # if the user already has the item
+  for i in user_items:
+    if item in i:
+      await ctx.channel.send("**You already have this item!**")
+      return
+
+  # if the user does not have enough gems to afford the item
+  for gem_info in pickaxe[item]:
+    if user_gems[gem_info[0]] < gem_info[1]:
+      await ctx.channel.send(
+          "**You do not have enough gems to buy this item!**")
+      return
+
+  # if the user has enough gems to afford the item
+  for gem_info in pickaxe[item]:
+    update_gemstone_database(user, gem_info[0], -gem_info[1])
+  update_item_database(user, item)
+  await ctx.channel.send("**You have successfully bought the item!**")
+
+# function that updates name of item to be upgraded in the user's inventory, and returns the updated name of item
+def upgrade_pickaxe(user, item):
+  # key = old reforge of pickaxe, value = new reforge of pickaxe
+  update_name = {
+      "GOOD": "PROPER",
+      "PROPER": "DECENT",
+      "DECENT": "STRONG",
+      "STRONG": "POLISHED",
+      "POLISHED": "REFINED",
+      "REFINED": "PERFECT"
+  }
+
+  # get index of item to be upgraded
+  index = db["item"][user].index(item)
+
+  # if the item is in its base form, i.e. PX-(shorted_name_of_gem)
+  if len(item) == 5:
+    db["item"][user][index] = "GOOD-" + db["item"][user][index]
+    return db["item"][user][index]
+    
+  reforge, pickaxe_name = "", ""
+  # set to True when char has looped to the start of pickaxe_name, after "-"
+  passed = False
+
+  # if the item already has a reforge, get the name of reforge and original pickaxe_name
+  for char in db["item"][user][index]:
+    if char != "-" and passed == False:
+      reforge += char
+    else:
+      passed = True
+      pickaxe_name += char
+
+  # update name of pickaxe and return it
+  db["item"][user][index] = update_name[reforge] + pickaxe_name
+  return db["item"][user][index]
+
+# command to set a gem to mine for pickaxe "PX-1" that will append a relevant letter to the end of its name e.g. "PX-1A"
+@bot.command()
+async def set_gem(ctx, gem=None):
+  # key = type of gem, value = corresponding letter to append
+  gem_letter = {
+      "iron": "A",
+      "gold": "B",
+      "diamond": "C",
+      "emerald": "D",
+      "sapphire": "E",
+      "ruby": "F",
+      "jade": "G",
+      "opal": "H",
+      "amethyst": "I",
+      "topaz": "J",
+      "onyx": "K",
+      "ic": "L"
+  }
+
+  if gem not in gem_letter.keys():
+    embed = discord.Embed(
+        title="Missing or Invalid Argument!",
+        description=
+        "**Try:** $set_gem (*specific_gem*) \n **Arguments:** *iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
+
+  # get user relevant information from database
+  user = str(ctx.author.id)
+  user_items = []
+  if user in db["item"].keys():
+    user_items = db["item"][user]
+
+  # loop through user's items to find index of PX-1 (includes those with letters appended)
+  for i in range(len(user_items)):
+    if "PX-1" in user_items[i]:
+      # append relevant letter to base name
+      name = "PX-1" + gem_letter[gem]
+      db["item"][user][i] = name
+      await ctx.channel.send(f"**Successfully set PX-1 to mine only {gem}! It has been renamed to {name}!**")
+      return
+
+  # cannot find item in user's items
+  await ctx.channel.send("**You do not have PX-1 and cannot set a gem for it to mine!**")
+
+# spend gems to upgrade a pickaxe
+@bot.command(name='upgrade')
+async def upgrade(ctx, item=None):
+  if item == None:
+    embed = discord.Embed(
+        title="Missing Argument!",
+        description=
+        "**Try:** $upgrade (*specific_pickaxe*)\n*Please check your inventory for available pickaxes to upgrade using $inv.*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
+    
+  # get user relevant information from database
+  user = str(ctx.author.id)
+  user_items, user_gems = [], []
+  if user in db["gemstone"].keys():
+    user_gems = db["gemstone"][user]
+  if user in db["item"].keys():
+    user_items = db["item"][user]
+  
+  # if user does not have the item
+  if item not in user_items:
+    await ctx.channel.send("**You do not have this item!**")
+    return
+
+  # key = upgradable item, value = list of tuples, where each tuple contains the index of the gem required and the amount of it that will be spent
+  upgrade_cost = {
+      "PX-IR": [(11, 20)],
+      "GOOD-PX-IR": [(11, 25)],
+      "PROPER-PX-IR": [(11, 33)],
+      "DECENT-PX-IR": [(11, 40)],
+      "STRONG-PX-IR": [(11, 50)],
+      "POLISHED-PX-IR": [(11, 200)],
+      "PX-GO": [(10, 10)],
+      "GOOD-PX-GO": [(10, 12)],
+      "PROPER-PX-GO": [(10, 16)],
+      "DECENT-PX-GO": [(10, 20)],
+      "STRONG-PX-GO": [(10, 25)],
+      "POLISHED-PX-GO": [(10, 100)],
+      "PX-DI": [(9, 10)],
+      "GOOD-PX-DI": [(9, 12)],
+      "PROPER-PX-DI": [(9, 16)],
+      "DECENT-PX-DI": [(9, 20)],
+      "STRONG-PX-DI": [(9, 25)],
+      "POLISHED-PX-DI": [(9, 100)],
+      "PX-EM": [(8, 6)],
+      "GOOD-PX-EM": [(8, 8)],
+      "PROPER-PX-EM": [(8, 12)],
+      "DECENT-PX-EM": [(8, 15)],
+      "STRONG-PX-EM": [(8, 18)],
+      "POLISHED-PX-EM": [8, 75],
+      "PX-SA": [(7, 4)],
+      "GOOD-PX-SA": [(7, 5)],
+      "PROPER-PX-SA": [(7, 6)],
+      "DECENT-PX-SA": [(7, 8)],
+      "STRONG-PX-SA": [(7, 10)],
+      "POLISHED-PX-SA": [(7, 40)],
+      "PX-RU": [(11, 125)],
+      "GOOD-PX-RU": [(11, 150)],
+      "PROPER-PX-RU": [(11, 200)],
+      "DECENT-PX-RU": [(11, 250)],
+      "STRONG-PX-RU": [(11, 300)],
+      "POLISHED-PX-RU": [(11, 1250)],
+      "PX-JA": [(11, 200)],
+      "GOOD-PX-JA": [(11, 250)],
+      "PROPER-PX-JA": [(11, 333)],
+      "DECENT-PX-JA": [(11, 400)],
+      "STRONG-PX-JA": [(11, 500)],
+      "POLISHED-PX-JA": [(11, 2000)],
+      "PX-OP": [(10, 100)],
+      "GOOD-PX-OP": [(10, 125)],
+      "PROPER-PX-OP": [(10, 166)],
+      "DECENT-PX-OP": [(10, 200)],
+      "STRONG-PX-OP": [(10, 250)],
+      "POLISHED-PX-OP": [(10, 1000)],
+      "REFINED-PX-OP": [(4, 10)],
+      "PX-AM": [(10, 200)],
+      "GOOD-PX-AM": [(10, 250)],
+      "PROPER-PX-AM": [(10, 333)],
+      "DECENT-PX-AM": [(10, 400)],
+      "STRONG-PX-AM": [(10, 500)],
+      "POLISHED-PX-AM": [(10, 2000)],
+      "REFINED-PX-AM": [(3, 10)],
+      "PX-TO": [(9, 125)],
+      "GOOD-PX-TO": [(9, 155)],
+      "PROPER-PX-TO": [(9, 208)],
+      "DECENT-PX-TO": [(9, 250)],
+      "STRONG-PX-TO": [(9, 312)],
+      "POLISHED-PX-TO": [(9, 1250)],
+      "REFINED-PX-TO": [(2, 6)],
+      "PX-ON": [(9, 250)],
+      "GOOD-PX-ON": [(9, 312)],
+      "PROPER-PX-ON": [(9, 416)],
+      "DECENT-PX-ON": [(9, 500)],
+      "STRONG-PX-ON": [(9, 625)],
+      "POLISHED-PX-ON": [(9, 2500)],
+      "REFINED-PX-ON": [(1, 5)],
+      "PX-IC": [(8, 250)],
+      "GOOD-PX-IC": [(8, 312)],
+      "PROPER-PX-IC": [(8, 416)],
+      "DECENT-PX-IC": [(7, 200)],
+      "STRONG-PX-IC": [(7, 250)],
+      "POLISHED-PX-IC": [(7, 1000)],
+      "REFINED-PX-IC": [(0, 1)],
+  }
+
+  # unupgradable item, i.e. maxed reforge (Perfect)
+  if item not in upgrade_cost.keys():
+    await ctx.channel.send("**You cannot upgrade this item!**")
+    return
+
+  # if the user cannot afford to upgrade the item
+  for gem_info in upgrade_cost[item]:
+    if user_gems[gem_info[0]] < gem_info[1]:
+      await ctx.channel.send(
+          "**You do not have enough gems to buy this item!**")
+      return
+      
+  # if user can afford to upgrade the item
+  for gem_info in upgrade_cost[item]:
+    update_gemstone_database(user, gem_info[0], -gem_info[1])
+  upgraded_pickaxe_name = upgrade_pickaxe(user, item)
+  await ctx.channel.send(f"**Successfully upgraded your {item} to {upgraded_pickaxe_name} **")
+
+# showcases all possible items available to be bought
 @bot.command()
 async def items(ctx):
-  if ctx.channel.name == "bot_commands":
+  embed = discord.Embed(
+      title="Items List:",
+      description=
+      "**Pickaxes:**\n**PX-GEM:** Increase chance to find the gemstone that the pickaxe is made of by 100%.\n**PX-A:** Increase chance to find any gemstone by 75%. [cannot be upgraded]\n**PX-X2:** Decreases chance to find any gemstone by 25%, but every gem found is doubled. [cannot be upgraded]\n**PX-1:** Increase chance of set gem to be found by 500%, but doesn't find any other gems. [cannot be upgraded]\n**PX-T:** Ability to find tokens when mining. [cannot be upgraded]",
+      color=discord.Color.red())
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(embed=embed)
+
+# shows the prices of all available items 
+@bot.command()
+async def items_pricing(ctx):
+  embed = discord.Embed(
+      title="Items Pricing:",
+      description=
+      "*This list shows the price of items that you can potentially buy. Once bought, the gems would be deducted from your balance and your networth will also decrease accordingly. Once an item is bought, you have to equip it to use it.*",
+      color=discord.Color.red())
+
+  # text to be added to pillow image
+  items_name = "PX-IR\nPX-GO\nPX-DI\nPX-EM\nPX-SA\nPX-RU\nPX-JA\nPX-OP\nPX-AM\nPX-TO\nPX-ON\nPX-IC\nPX-A\nPX-X2\nPX-1\nPX-T"
+  items_price = "200 Iron\n100 Gold\n100 Diamond\n60 Emerald + 150 Iron\n30 Sapphire + 250 Iron\n20 Ruby + 250 Iron\n15 Jade + 500 Iron\n5 Opal + 1250 Iron\n5 Amethyst + 1000 Gold\n150 Sapphire + 100 Emerald + 300 Diamond\n20 Opal + 25 Jade + 50 Ruby\n5 Onyx + 10 Topaz + 5 Amethyst\n1 of every single gem\n1 of every single gem\n1 of every single gem\n1 Invisible Crystal"
+
+  # creating pillow image of text
+  img = PIL.Image.new(mode="RGBA", size=(800, 480), color=(0, 0, 0, 0))
+  font = ImageFont.truetype("whitneymedium.otf", 24)
+  font2 = ImageFont.truetype("whitneybold.otf", 28)
+  draw = ImageDraw.Draw(img)
+  draw.text((5, 0), "Pickaxe:", (220, 221, 222), font=font2)
+  draw.text((325, 0), "Total Price:", (220, 221, 222), font=font2)
+  draw.text((5, 30), items_name.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  draw.text((325, 30), items_price.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  with BytesIO() as image_binary:
+    img.save(image_binary, 'PNG')
+    image_binary.seek(0)
+    file = discord.File(fp=image_binary, filename='image.png')
+  embed.set_image(url="attachment://image.png")
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(file=file, embed=embed)
+
+# shows the cost of upgrading any pickaxe under PX-GEM
+@bot.command(name='upgrade_cost')
+async def upgrade_cost(ctx, item=None):
+
+  # key = base pickaxe name, value = cost of reforges
+  cheap_upgrades = {
+    "PX-IR": ["20 Iron", "25 Iron", "33 Iron", "40 Iron", "50 Iron", "200 Iron"],
+    "PX-GO": ["10 Gold", "12 Gold", "16 Gold", "20 Gold", "25 Gold", "100 Gold"],
+    "PX-DI": ["10 Diamond", "12 Diamond", "16 Diamond", "20 Diamond", "25 Diamond", "100 Diamond"],
+    "PX-EM": ["6 Emerald", "8 Emerald", "12 Emerald", "15 Emerald", "18 Emerald", "75 Emerald"],
+    "PX-SA": ["4 Sapphire", "5 Sapphire", "6 Sapphire", "8 Sapphire", "10 Sapphire", "40 Sapphire"],
+    "PX-RU": ["125 Iron", "150 Iron", "200 Iron", "250 Iron", "300 Iron", "1250 Iron"],
+    "PX-JA": ["200 Iron", "250 Iron", "333 Iron", "400 Iron", "500 Iron", "2000 Iron"],
+  }
+  
+  # key = base pickaxe name, value = cost of reforges, including additional reforge "Perfect"
+  expensive_upgrades = {
+    "PX-OP": ["100 Gold", "125 Gold", "166 Gold", "200 Gold", "250 Gold", "1000 Gold", "10 Opal"],
+    "PX-AM": ["200 Gold", "250 Gold", "333 Gold", "400 Gold", "500 Gold", "2000 Gold", "10 Amethyst"],
+    "PX-TO": ["125 Diamond", "155 Diamond", "208 Diamond", "250 Diamond", "312 Diamond", "1250 Diamond", "6 Topaz"],
+    "PX-ON": ["250 Diamond", "312 Diamond", "416 Diamond", "500 Diamond", "625 Diamond", "2500 Diamond", "5 Onyx"], 
+    "PX-IC": ["250 Emerald", "312 Emerald", "416 Emerald", "200 Sapphire", "250 Sapphire", "1000 Sapphire", "1 Invisible Crystal"]
+  }
+
+  if item == None or not (item in cheap_upgrades.keys() or item in expensive_upgrades.keys()):
     embed = discord.Embed(
-      title="Items List:", 
-      description="**Pickaxes:**\n**PX-GEM:** Increase chance to find the gemstone that the pickaxe is made of by 100%.\n**PX-A:** Increase chance to find any gemstone by 75%. [cannot be upgraded]\n**PX-X2:** Decreases chance to find any gemstone by 25%, but every gem found is doubled. [cannot be upgraded]\n**PX-1:** Increase chance of set gem to be found by 500%, but doesn't find any other gems. [cannot be upgraded]\n**PX-T:** Ability to find tokens when mining. [cannot be upgraded]", 
-      color=discord.Color.red()
-      )
+        title="Missing or Invalid Argument!",
+        description="**Try:** $upgrade_cost (*specific_pickaxe*)\n**Arguments:** *PX-IR, PX-GO, PX-DI, PX-EM, PX-SA, PX-RU, PX-JA, PX-OP, PX-AM, PX-TO, PX-ON, PX-IC*\nThe additional percentage would be a multiple of the base percentage + base pickaxe percentage.\nFor example: Equipping a GOOD-PX-IR would increase your iron chance from 0.25 to 0.25x2x1.5 = 0.75, where maximum chance is 1.",
+        color=discord.Color.red())
     embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
     await ctx.send(embed=embed)
+    return
 
-#gem info
-@bot.command()
-async def gem(ctx):
-  if ctx.channel.name == "bot_commands":
+  if item in cheap_upgrades.keys():
+    l = cheap_upgrades[item]
     embed = discord.Embed(
-      title="Gem Information:", 
-      description="*This list gives information for the possible gems to be obtained.*",
-      color=discord.Color.red()
-      )
-    name1="Iron\nGold\nDiamond\nEmerald\nSapphire\nRuby\nJade\nOpal\nAmethyst\nTopaz\nOnyx\nInvisible Crystal"
-    name2="$4\n$10\n$20\n$40\n$100\n$200\n$400\n$1000\n$2000\n$4000\n$10000\n$100000"
-    name3="25%\n10%\n5%\n2.5%\n1%\n0.5%\n0.25%\n0.1%\n0.05%\n0.025%\n0.01%\n0.001%"
-    img = PIL.Image.new(mode="RGBA", size=(800, 380), color=(0, 0, 0, 0))
-    font = ImageFont.truetype("whitneymedium.otf", 24)
-    font2 = ImageFont.truetype("whitneybold.otf", 28)
-    draw = ImageDraw.Draw(img)
-    draw.text((5,0), "Gem:", (220,221,222), font=font2)
-    draw.text((325,0), "Worth:", (220,221,222), font=font2)
-    draw.text((600,0), "Base Chance:", (220,221,222), font=font2)
-    draw.text((5,30), str(name1).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-    draw.text((325,30), str(name2).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-    draw.text((600,30), str(name3).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-    with BytesIO() as image_binary:
-      img.save(image_binary, 'PNG')
-      image_binary.seek(0)
-      file=discord.File(fp=image_binary, filename='image.png')
-    embed.set_image(url="attachment://image.png")
+      title=f"Upgrade Costs for {item}",
+      description=f"Good [+50%]: {l[0]}\nProper [+60%]: {l[1]}\nDecent [+70%]: {l[2]}\nStrong [+80%]: {l[3]}\nPolished [+90%]: {l[4]}\nRefined [+100%]: {l[5]}",
+      color=discord.Color.red())
     embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-    await ctx.send(file=file,embed=embed)
+    await ctx.send(embed=embed)
+    return 
 
-#all item price
-@bot.command()
-async def price(ctx):
-  if ctx.channel.name == "bot_commands":
+  if item in expensive_upgrades.keys():
+    l = expensive_upgrades[item]
     embed = discord.Embed(
-      title="Pricing List:", 
-      description="*This list shows the price of items that you can potentially buy. Once bought, the gems would be deducted from your balance and your networth will also decrease accordingly. Once an item is bought, you have to equip it to use it.*",
-      color=discord.Color.red()
-      )
-    name1="PX-IR\nPX-GO\nPX-DI\nPX-EM\nPX-SA\nPX-RU\nPX-JA\nPX-OP\nPX-AM\nPX-TO\nPX-ON\nPX-IC\nPX-A\nPX-X2\nPX-1\nPX-T"
-    name2="200 Iron\n100 Gold\n100 Diamond\n60 Emerald + 150 Iron\n30 Sapphire + 250 Iron\n20 Ruby + 250 Iron\n15 Jade + 500 Iron\n5 Opal + 1250 Iron\n5 Amethyst + 1000 Gold\n150 Sapphire + 100 Emerald + 300 Diamond\n20 Opal + 25 Jade + 50 Ruby\n5 Onyx + 10 Topaz + 5 Amethyst\n1 of every single gem\n1 of every single gem\n1 of every single gem\n1 Invisible Crystal"
-    img = PIL.Image.new(mode="RGBA", size=(800, 480), color=(0, 0, 0, 0))
-    font = ImageFont.truetype("whitneymedium.otf", 24)
-    font2 = ImageFont.truetype("whitneybold.otf", 28)
-    draw = ImageDraw.Draw(img)
-    draw.text((5,0), "Pickaxe:", (220,221,222), font=font2)
-    draw.text((325,0), "Total Price:", (220,221,222), font=font2)
-    draw.text((5,30), str(name1).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-    draw.text((325,30), str(name2).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-    with BytesIO() as image_binary:
-      img.save(image_binary, 'PNG')
-      image_binary.seek(0)
-      file=discord.File(fp=image_binary, filename='image.png')
-    embed.set_image(url="attachment://image.png")
+      title=f"Upgrade Costs for {item}",
+      description=f"Good [+50%]: {l[0]}\nProper [+60%]: {l[1]}\nDecent [+70%]: {l[2]}\nStrong [+80%]: {l[3]}\nPolished [+90%]: {l[4]}\nRefined [+100%]: {l[5]}\nPerfect [+200%]: {l[6]}",
+      color=discord.Color.red())
     embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-    await ctx.send(file=file,embed=embed)
-      
-#leaderboard command
-@bot.command(name='lb')
-async def lb(ctx, arg=None):
-  if ctx.channel.name == "bot_commands":
-    #if no argument for leaderboard provided
-    if arg == None:
-      embed = discord.Embed(
-      title="Missing Argument!", 
-      description="**Try:** $lb (*specific_leaderboard*) \n **Arguments:** *nw, iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*", 
-      color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-    #if argument is a gemstone
-    elif arg == 'iron' or arg == 'gold' or arg == 'diamond' or arg == 'emerald' or arg == 'sapphire' or arg == "ruby" or arg == "jade" or arg == "opal" or arg == "amethyst" or arg == "topaz" or arg == "onyx" or arg == "ic":
-      gem = str(arg.title())
-      title = ""
-      title = gem
-      if arg == "ic":
-        gem = "IC"
-        title = "Invisible Crystal"
-      tempdatabase = leaderboard()
-      def myFunc(e):
-        return e[gem]
-      tempdatabase.sort(key=myFunc,reverse=True)
-      counttoten = 0
-      usernames = ""
-      values = ""
-      for x in tempdatabase:
-        counttoten = counttoten + 1
-        output = int(x["ID"][0])
-        #when no one is on the leaderboard
-        if x[gem][0] == 0 and counttoten == 1:
-          embed = discord.Embed(
-          title="Empty Leaderboard!", 
-          description="**Wow!** *There is no one here! Obtain the item you searched for and be the first one on this leaderboard!*", 
-          color=discord.Color.red()
-      )
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(embed=embed)
-          break
-        #adding people on leaderboard to a string
-        if x[gem][0] != 0:
-          values = values + str(x[gem][0]) + "\n"
-          usernames = usernames + str(bot.get_user(output)) + "\n"
-        #printing the leaderboard once everyone required is in the string
-        if x[gem][0] == 0 or x == tempdatabase[-1] or counttoten == 10:
-          embed = discord.Embed(
-          title=f"**{title} Leaderboard:**", 
-          description=f"*This leaderboard shows the users with the most amount of {title}!*",
-          color=discord.Color.red()
-      )     
-          img = PIL.Image.new(mode="RGBA", size=(800, 315), color=(0, 0, 0, 0))
-          font = ImageFont.truetype("whitneymedium.otf", 24)
-          font2 = ImageFont.truetype("whitneybold.otf", 28)
-          draw = ImageDraw.Draw(img)
-          draw.text((5,0), "User:", (220,221,222), font=font2)
-          draw.text((575,0), "Amount:", (220,221,222), font=font2)
-          draw.text((5,30), str(usernames).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-          draw.text((575,30), str(values).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-          with BytesIO() as image_binary:
-            img.save(image_binary, 'PNG')
-            image_binary.seek(0)
-            file=discord.File(fp=image_binary, filename='image.png')
-          embed.set_image(url="attachment://image.png")
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(file=file,embed=embed)
-          break
-    #when leaderboard argument is networth
-    elif arg == 'nw':
-      nwlb = {"ID":[],"value":[]}
-      networth = []
-      tempdatabase = leaderboard()
-      for x in tempdatabase:
-        iron = int(x["Iron"][0])
-        gold = int(x["Gold"][0])
-        diamond = int(x["Diamond"][0])
-        emerald = int(x["Emerald"][0])
-        sapphire = int(x["Sapphire"][0])
-        ruby = int(x["Ruby"][0])
-        jade = int(x["Jade"][0])
-        opal = int(x["Opal"][0])
-        amethyst = int(x["Amethyst"][0])
-        topaz = int(x["Topaz"][0])
-        onyx = int(x["Onyx"][0])
-        ic = int(x["IC"][0])
-        value = int(iron)*4 + int(gold)*10 + int(diamond)*20 + int(emerald)*40 + int(sapphire)*100 + int(ruby)*200 + int(jade)*400 + int(opal)*1000 + int(amethyst)*2000 + int(topaz)*4000 + int(onyx)*10000 + int(ic)*100000
-        nwlb["ID"].append(x["ID"][0])
-        nwlb["value"].append(int(value))
-        networth.append(nwlb)
-        nwlb = {"ID":[],"value":[]}
-      def myFunc(e):
-          return e["value"]
-      networth.sort(key=myFunc,reverse=True)
-      usernames = ""
-      values = ""
-      counttoten = 0
-      for x in networth:
-        counttoten = counttoten + 1
-        output = int(x["ID"][0])
-        #when no one is on the leaderboard
-        if x["value"][0] == 0:
-          embed = discord.Embed(
-          title="Empty Leaderboard!", 
-          description="**Wow!** *There is no one here! Obtain some gems and be the first one on this leaderboard!*", 
-          color=discord.Color.red()
-      )
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(embed=embed)
-          break
-        #adding people on leaderboard to a string
-        if x["value"][0] != 0:
-          values = values + "$" + str(x["value"][0]) + "\n"
-          usernames = usernames + str(bot.get_user(output)) + "\n"
-        #printing the leaderboard once everyone required is in the string
-        if x["value"][0] == 0 or x == networth[-1] or counttoten == 10:
-          embed = discord.Embed(
-          title=f"**Networth Leaderboard:**", 
-          description=f"*This leaderboard shows the users with the highest networth!*",
-          color=discord.Color.red()
-      )     
-          img = PIL.Image.new(mode="RGBA", size=(800, 315), color=(0, 0, 0, 0))
-          font = ImageFont.truetype("whitneymedium.otf", 24)
-          font2 = ImageFont.truetype("whitneybold.otf", 28)
-          draw = ImageDraw.Draw(img)
-          draw.text((5,0), "User:", (220,221,222), font=font2)
-          draw.text((550,0), "Networth:", (220,221,222), font=font2)
-          draw.text((5,30), str(usernames).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-          draw.text((550,30), str(values).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-          with BytesIO() as image_binary:
-            img.save(image_binary, 'PNG')
-            image_binary.seek(0)
-            file=discord.File(fp=image_binary, filename='image.png')
-          embed.set_image(url="attachment://image.png")
-          embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-          await ctx.send(file=file,embed=embed)
-          break
-    #no leaderboard argument
-    else:
-      embed = discord.Embed(
-      title="Invalid Argument!", 
-      description="**Try:** $lb (*specific_leaderboard*) \n **Arguments:** *nw, iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*", 
-      color=discord.Color.red()
-      )
-      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-      await ctx.send(embed=embed)
-      
-#profile with everything a user has
+    await ctx.send(embed=embed)
+    
+# inventory that shows number of tokens and list of items owned
 @bot.command()
-async def profile(ctx, member: discord.Member = None):
+async def inv(ctx, member: discord.Member = None):
+  # get original or specified user info
+  user = str(ctx.author.id)
   if member == None:
-    user = int(ctx.author.id)
     member = ctx.author
   else:
-    user = member.id
-  if ctx.channel.name == "bot_commands":
-    gemlist = ["Iron", "Gold", "Diamond", "Emerald", "Sapphire", "Ruby", "Jade", "Opal", "Amethyst", "Topaz", "Onyx", "IC"]
-    gemcounter = 0
-    for a in gemlist:
-      def myFunc(e):
-        return e[a]
-      tempdatabase = leaderboard()
-      tempdatabase.sort(key=myFunc,reverse=True)
-      counter = 0
-      for x in tempdatabase:
-        counter = counter + 1
-        if int(x["ID"][0]) == user and int(x[a][0] != 0):
-          gemlist[gemcounter] = int(counter)
-          gemcounter = gemcounter + 1
-          break
-        elif int(x["ID"][0]) == user and int(x[a][0] == 0):
-          gemlist[gemcounter] = "None"
-          gemcounter = gemcounter + 1
-          break
-    for x in tempdatabase:
-      if int(x["ID"][0]) == user:
-        iron = str(x["Iron"][0])
-        gold = str(x["Gold"][0])
-        diamond = str(x["Diamond"][0])
-        emerald = str(x["Emerald"][0])
-        sapphire = str(x["Sapphire"][0])
-        ruby = str(x["Ruby"][0])
-        jade = str(x["Jade"][0])
-        opal = str(x["Opal"][0])
-        amethyst = str(x["Amethyst"][0])
-        topaz = str(x["Topaz"][0])
-        onyx = str(x["Onyx"][0])
-        ic = str(x["IC"][0])
-        value = int(iron)*4 + int(gold)*10 + int(diamond)*20 + int(emerald)*40 + int(sapphire)*100 + int(ruby)*200 + int(jade)*400 + int(opal)*1000 + int(amethyst)*2000 + int(topaz)*4000 + int(onyx)*10000 + int(ic)*100000
-        embed = discord.Embed(
-        title=f"{member}'s Profile:", 
-        description=f"**Networth:** *${value}*\nYour networth is the sum of the values of all the gemstones you currently own!", 
-        color=discord.Color.red()
-      )
-        name1="Iron\nGold\nDiamond\nEmerald\nSapphire\nRuby\nJade\nOpal\nAmethyst\nTopaz\nOnyx\nInvisible Crystal"
-        name2=f"{iron}\n{gold}\n{diamond}\n{emerald}\n{sapphire}\n{ruby}\n{jade}\n{opal}\n{amethyst}\n{topaz}\n{onyx}\n{ic}"
-        name3=f"{gemlist[0]}\n{gemlist[1]}\n{gemlist[2]}\n{gemlist[3]}\n{gemlist[4]}\n{gemlist[5]}\n{gemlist[6]}\n{gemlist[7]}\n{gemlist[8]}\n{gemlist[9]}\n{gemlist[10]}\n{gemlist[11]}"
-        img = PIL.Image.new(mode="RGBA", size=(800, 370), color=(0, 0, 0, 0))
-        font = ImageFont.truetype("whitneymedium.otf", 24)
-        font2 = ImageFont.truetype("whitneybold.otf", 28)
-        draw = ImageDraw.Draw(img)
-        draw.text((5,0), "Gemstone:", (220,221,222), font=font2)
-        draw.text((250,0), "Amount:", (220,221,222), font=font2)
-        draw.text((500,0), "Position:", (220,221,222), font=font2)
-        draw.text((5,30), str(name1).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-        draw.text((250,30), str(name2).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-        draw.text((500,30), str(name3).encode('utf-8').decode('utf-8'), (220,221,222), font=font)
-        with BytesIO() as image_binary:
-          img.save(image_binary, 'PNG')
-          image_binary.seek(0)
-          file=discord.File(fp=image_binary, filename='image.png')
-        embed.set_thumbnail(url=member.avatar)  
-        embed.set_image(url="attachment://image.png")
-        embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-        await ctx.send(file=file,embed=embed)
-        break
-      #if user not in database
-      elif x == tempdatabase[-1]:
-        embed = discord.Embed(
-        title="User not in database!", 
-        description="**Oh no!** *You need to chat and obtain at least 1 gem to be registered in the database!*", 
-        color=discord.Color.red()
-      )
-        embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
-        await ctx.send(embed=embed)
-        break
+    user = str(member.id)
 
-#spawn gem command
-@bot.command(name='spawn')
-async def spawn(ctx,member: discord.Member=None,gemcode=None,amount=None):
-  if ctx.channel.name == "bot_commands":
-    if ctx.author.id != 315107540138721280:
-      await ctx.channel.send("**You cannot use this command!**")
-    else: 
-      user = member.id
-      for x in db["gems"]:
-        if x[0] == user:
-          x[int(gemcode)] = x[int(gemcode)] + int(amount)
-          break
+  if user not in db["item"].keys():
+    embed = discord.Embed(
+        title="Empty Inventory!",
+        description="**Oh no!** *You need to own at least 1 pickaxe to access your inventory!*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
 
-#on every message this happens
+  # add all user's items into a string 
+  string = ""
+  for i in db["item"][user]:
+    string += i + "\n"
+
+  # include number of tokens in inventory
+  token_count = db["gemstone"][user][12]
+  
+  embed = discord.Embed(
+      title=f"{member}'s Inventory:",
+      description=f"*This list shows everything you currently own! The first item is your equipped item.*\n**Tokens: {token_count}**\n{string}",
+      color=discord.Color.red())
+  embed.set_thumbnail(url=member.avatar)
+  embed.set_image(url="attachment://image.png")
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(embed=embed)
+
+# an item is equipped when it is the user's first item in the item database at index 0
+@bot.command()
+async def equip(ctx, item=None):
+  if item == None:
+    embed = discord.Embed(
+        title="Missing Argument!",
+        description="**Try:** $equip (*specific_item*) \n *Please check your inventory for available items to equip using $inv.*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
+
+  # get user relevant information from database
+  user = str(ctx.author.id)
+  user_items = []
+  if user in db["item"].keys():
+    user_items = db["item"][user]
+    
+  if item not in user_items:
+    await ctx.channel.send("**You do not have this item!**")
+    return
+  else:
+    # find index of item and swap it with the currently equipped item
+    index = db["item"][user].index(item)
+    db["item"][user][0], db["item"][user][index] = db["item"][user][index], db["item"][user][0]
+    await ctx.channel.send("**You have successfully equipped this item!**")
+
+# taking data from gemstone database and forming a temporary leaderboard
+def leaderboard(gem_index):
+  tempdatabase = {}
+  for key, value in db["gemstone"].items():
+    tempdatabase[key] = value[gem_index]
+  # sample return [(user1, 1000), (user2, 500), (user3, 100), (user4, 25), (user5, 0)]
+  return sorted(tempdatabase.items(), key=lambda item: item[1], reverse=True)
+
+# produces a leaderboard for total networth or a specific gem
+@bot.command(name='lb')
+async def lb(ctx, arg=None):
+  # key = name of gem, value = its index in gemstone database under any user
+  name_index = {
+      "iron": 11,
+      "gold": 10,
+      "diamond": 9,
+      "emerald": 8,
+      "sapphire": 7,
+      "ruby": 6,
+      "jade": 5,
+      "opal": 4,
+      "amethyst": 3,
+      "topaz": 2,
+      "onyx": 1,
+      "ic": 0
+  }
+  
+  if arg == None or not (arg in name_index.keys() or arg == "nw"):
+    embed = discord.Embed(
+        title="Missing or Invalid Argument!",
+        description=
+        "**Try:** $lb (*specific_leaderboard*) \n **Arguments:** *nw, iron, gold, diamond, emerald, sapphire, ruby, jade, opal, amethyst, topaz, onyx, ic*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
+    
+  # if the argument is a gemstone
+  if arg in name_index.keys():
+    # string formatting for ugly shortened name
+    title = arg.title()
+    if arg == "ic":
+      title = "Invisible Crystal"
+
+    # tempdb is a list of tuples of users and the amount of the specific gem they own
+    tempdb = leaderboard(name_index[arg])
+    
+    if tempdb[0][1] == 0:
+      embed = discord.Embed(
+          title="Empty Leaderboard!",
+          description="**Wow!** *There is no one here! Obtain the item you searched for and be the first one on this leaderboard!*",
+          color=discord.Color.red())
+      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+      await ctx.send(embed=embed)
+      return
+
+    # adding users from the leaderboard to relevant strings to display in pillow image
+    usernames, amount = "", ""
+
+    # only want users in the top 10 or less that have at least 1 of the required gem 
+    for user in range(min(10, len(tempdb))):
+      if tempdb[user][1] != 0:
+        usernames += str(bot.get_user(int(tempdb[user][0]))) + "\n"
+        amount += str(tempdb[user][1]) + "\n"
+        
+    # displaying image of the leaderboard 
+    embed = discord.Embed(
+        title=f"**{title} Leaderboard:**",
+        description=f"*This leaderboard shows the users with the most amount of {title}!*",
+        color=discord.Color.red())
+    img = PIL.Image.new(mode="RGBA", size=(800, 315), color=(0, 0, 0, 0))
+    font = ImageFont.truetype("whitneymedium.otf", 24)
+    font2 = ImageFont.truetype("whitneybold.otf", 28)
+    draw = ImageDraw.Draw(img)
+    draw.text((5, 0), "User:", (220, 221, 222), font=font2)
+    draw.text((575, 0), "Amount:", (220, 221, 222), font=font2)
+    draw.text((5, 30), usernames.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+    draw.text((575, 30), amount.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+    with BytesIO() as image_binary:
+      img.save(image_binary, 'PNG')
+      image_binary.seek(0)
+      file = discord.File(fp=image_binary, filename='image.png')
+    embed.set_image(url="attachment://image.png")
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(file=file, embed=embed)
+    return
+    
+  if arg == "nw":
+    #calculating networth of every user and sorting it
+    networth = []
+    for user, user_gems in db["gemstone"].items():
+      total_value = user_gems[11] * 4 + user_gems[10] * 10 + user_gems[9] * 20 + user_gems[8] * 40 + user_gems[7] * 100 + user_gems[6] * 200 + user_gems[5] * 400 + user_gems[4] * 1000 + user_gems[3] * 2000 + user_gems[2] * 4000 + user_gems[1] * 10000 + user_gems[0] * 100000
+      networth.append((user, total_value))
+    networth = sorted(networth, key=lambda x: x[1], reverse=True)
+    
+    if networth[0][1] == 0:
+      embed = discord.Embed(
+          title="Empty Leaderboard!",
+          description="**Wow!** *There is no one here! Obtain some gems and be the first one on this leaderboard!*",
+          color=discord.Color.red())
+      embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+      await ctx.send(embed=embed)
+      return
+      
+    # adding users from the leaderboard to relevant strings to display in pillow image
+    usernames, values = "", ""
+    
+    # only want users in the top 10 or less that have at a networth
+    for i in range(min(10, len(networth))):
+      usernames += str(bot.get_user(int(networth[i][0]))) + "\n"
+      values += "$" + str(networth[i][1]) + "\n"
+
+    # displaying image of the leaderboard 
+    embed = discord.Embed(
+        title=f"**Networth Leaderboard:**",
+        description=f"*This leaderboard shows the users with the highest networth!*",
+        color=discord.Color.red())
+    img = PIL.Image.new(mode="RGBA", size=(800, 315), color=(0, 0, 0, 0))
+    font = ImageFont.truetype("whitneymedium.otf", 24)
+    font2 = ImageFont.truetype("whitneybold.otf", 28)
+    draw = ImageDraw.Draw(img)
+    draw.text((5, 0), "User:", (220, 221, 222), font=font2)
+    draw.text((550, 0), "Networth:", (220, 221, 222), font=font2)
+    draw.text((5, 30), usernames.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+    draw.text((550, 30), values.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+    with BytesIO() as image_binary:
+      img.save(image_binary, 'PNG')
+      image_binary.seek(0)
+      file = discord.File(fp=image_binary, filename='image.png')
+    embed.set_image(url="attachment://image.png")
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(file=file, embed=embed)
+    return
+
+# profile that shows number of each gem that a user has
+@bot.command()
+async def profile(ctx, member: discord.Member = None):
+  # get original or specified user info
+  user = str(ctx.author.id)
+  if member == None:
+    member = ctx.author
+  else:
+    user = str(member.id)
+
+  if user not in db["gemstone"].keys():
+    embed = discord.Embed(
+        title="User not in database!",
+        description="**Oh no!** *You need to chat and obtain at least 1 gem to be registered in the database!*",
+        color=discord.Color.red())
+    embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+    await ctx.send(embed=embed)
+    return
+
+  # calculating total networth of user and converting amount of each gem to string 
+  user_gems = db["gemstone"][user]
+  total_value = user_gems[11] * 4 + user_gems[10] * 10 + user_gems[9] * 20 + user_gems[8] * 40 + user_gems[7] * 100 + user_gems[6] * 200 + user_gems[5] * 400 + user_gems[4] * 1000 + user_gems[3] * 2000 + user_gems[2] * 4000 + user_gems[1] * 10000 + user_gems[0] * 100000
+
+  # reverse user_gems and convert each element in user_gems to a string joined by newline without changing the original list
+  temp_list = user_gems[:]
+  # remove token amount
+  temp_list.pop()
+  temp_list.reverse()
+  amount = '\n'.join(map(str, temp_list))
+
+  # displaying image of the user's profile
+  embed = discord.Embed(
+      title=f"{member}'s Profile:",
+      description=
+      f"**Networth:** *${total_value}*\nYour networth is the sum of the values of all the gemstones you currently own!",
+      color=discord.Color.red())
+  gem_name = "Iron\nGold\nDiamond\nEmerald\nSapphire\nRuby\nJade\nOpal\nAmethyst\nTopaz\nOnyx\nInvisible Crystal"
+  img = PIL.Image.new(mode="RGBA", size=(800, 370), color=(0, 0, 0, 0))
+  font = ImageFont.truetype("whitneymedium.otf", 24)
+  font2 = ImageFont.truetype("whitneybold.otf", 28)
+  draw = ImageDraw.Draw(img)
+  draw.text((5, 0), "Gemstone:", (220, 221, 222), font=font2)
+  draw.text((500, 0), "Amount:", (220, 221, 222), font=font2)
+  draw.text((5, 30), gem_name.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  draw.text((500, 30), amount.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  with BytesIO() as image_binary:
+    img.save(image_binary, 'PNG')
+    image_binary.seek(0)
+    file = discord.File(fp=image_binary, filename='image.png')
+  embed.set_thumbnail(url=member.avatar)
+  embed.set_image(url="attachment://image.png")
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(file=file, embed=embed)
+  return
+
+# information on names of the gems, their values and drop chance
+@bot.command()
+async def gems(ctx):
+  embed = discord.Embed(
+      title="Gem Information:",
+      description="*This list gives information for the possible gems to be obtained.*",
+      color=discord.Color.red())
+  gem_name = "Iron\nGold\nDiamond\nEmerald\nSapphire\nRuby\nJade\nOpal\nAmethyst\nTopaz\nOnyx\nInvisible Crystal"
+  gem_value = "$4\n$10\n$20\n$40\n$100\n$200\n$400\n$1000\n$2000\n$4000\n$10000\n$100000"
+  drop_chance = "25%\n10%\n5%\n2.5%\n1%\n0.5%\n0.25%\n0.1%\n0.05%\n0.025%\n0.01%\n0.001%"
+  img = PIL.Image.new(mode="RGBA", size=(800, 380), color=(0, 0, 0, 0))
+  font = ImageFont.truetype("whitneymedium.otf", 24)
+  font2 = ImageFont.truetype("whitneybold.otf", 28)
+  draw = ImageDraw.Draw(img)
+  draw.text((5, 0), "Gem:", (220, 221, 222), font=font2)
+  draw.text((325, 0), "Worth:", (220, 221, 222), font=font2)
+  draw.text((600, 0), "Base Chance:", (220, 221, 222), font=font2)
+  draw.text((5, 30), gem_name.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  draw.text((325, 30), gem_value.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  draw.text((600, 30), drop_chance.encode('utf-8').decode('utf-8'), (220, 221, 222), font=font)
+  with BytesIO() as image_binary:
+    img.save(image_binary, 'PNG')
+    image_binary.seek(0)
+    file = discord.File(fp=image_binary, filename='image.png')
+  embed.set_image(url="attachment://image.png")
+  embed.set_footer(text="Shibbot | made by: shibecaisu#8100")
+  await ctx.send(file=file, embed=embed)
+
+# this happens everytime a message is sent
 @bot.event
 async def on_message(message):
-  if message.author.id == None:
+  # message has to be from a user and not a bot
+  if message.author.id == None or message.author == bot.user:
     return
-  await bot.process_commands(message)
-  channel = bot.get_channel(889529318974296105) #change this to logs channel!
-  if message.author == bot.user:
-    return
-  channelcheck = ["bot_commands", "server-logs", "message-logs", "member-logs", "welcome-logs", "management", "music"]
-  #if message not in unwanted channels, roll the rng
-  iron_chance = 0.25
-  gold_chance = 0.1
-  diamond_chance = 0.05
-  emerald_chance = 0.025
-  sapphire_chance = 0.01
-  ruby_chance =  0.005
-  jade_chance = 0.0025
-  opal_chance = 0.001
-  amethyst_chance = 0.0005
-  topaz_chance = 0.00025
-  onyx_chance = 0.0001
-  ic_chance = 0.00001
-  double_drop_chance = 0
-  token_chance = 0
-  useritems = []
-  useritems = find_user_items(message.author.id)
-  if useritems != []:
-    if "PX-IR" in useritems[1]:
-      iron_chance = iron_chance*2
-      if "GOOD" in useritems[1]:
-        iron_chance = iron_chance*1.5
-      if "PROPER" in useritems[1]:
-        iron_chance = iron_chance*1.6
-      if "DECENT" in useritems[1]:
-        iron_chance = iron_chance*1.7
-      if "STRONG" in useritems[1]:
-        iron_chance = iron_chance*1.8
-      if "POLISHED" in useritems[1]:
-        iron_chance = iron_chance*1.9
-      if "REFINED" in useritems[1]:
-        iron_chance = iron_chance*2
-    if "PX-GO" in useritems[1]:
-      gold_chance = gold_chance*2
-      if "GOOD" in useritems[1]:
-        gold_chance = gold_chance*1.5
-      if "PROPER" in useritems[1]:
-        gold_chance = gold_chance*1.6
-      if "DECENT" in useritems[1]:
-        gold_chance = gold_chance*1.7
-      if "STRONG" in useritems[1]:
-        gold_chance = gold_chance*1.8
-      if "POLISHED" in useritems[1]:
-        gold_chance = gold_chance*1.9
-      if "REFINED" in useritems[1]:
-        gold_chance = gold_chance*2
-    if "PX-DI" in useritems[1]:
-      diamond_chance = diamond_chance*2
-      if "GOOD" in useritems[1]:
-        diamond_chance = diamond_chance*1.5
-      if "PROPER" in useritems[1]:
-        diamond_chance = diamond_chance*1.6
-      if "DECENT" in useritems[1]:
-        diamond_chance = diamond_chance*1.7
-      if "STRONG" in useritems[1]:
-        diamond_chance = diamond_chance*1.8
-      if "POLISHED" in useritems[1]:
-        diamond_chance = diamond_chance*1.9
-      if "REFINED" in useritems[1]:
-        diamond_chance = diamond_chance*2
-    if "PX-EM" in useritems[1]:
-      emerald_chance = emerald_chance*2
-      if "GOOD" in useritems[1]:
-        emerald_chance = emerald_chance*1.5
-      if "PROPER" in useritems[1]:
-        emerald_chance = emerald_chance*1.6
-      if "DECENT" in useritems[1]:
-        emerald_chance = emerald_chance*1.7
-      if "STRONG" in useritems[1]:
-        emerald_chance = emerald_chance*1.8
-      if "POLISHED" in useritems[1]:
-        emerald_chance = emerald_chance*1.9
-      if "REFINED" in useritems[1]:
-        emerald_chance = emerald_chance*2
-    if "PX-SA" in useritems[1]:
-      sapphire_chance = sapphire_chance*2
-      if "GOOD" in useritems[1]:
-        sapphire_chance = sapphire_chance*1.5
-      if "PROPER" in useritems[1]:
-        sapphire_chance = sapphire_chance*1.6
-      if "DECENT" in useritems[1]:
-        sapphire_chance = sapphire_chance*1.7
-      if "STRONG" in useritems[1]:
-        sapphire_chance = sapphire_chance*1.8
-      if "POLISHED" in useritems[1]:
-        sapphire_chance = sapphire_chance*1.9
-      if "REFINED" in useritems[1]:
-        sapphire_chance = sapphire_chance*2
-    if "PX-RU" in useritems[1]:
-      ruby_chance = ruby_chance*2
-      if "GOOD" in useritems[1]:
-        ruby_chance = ruby_chance*1.5
-      if "PROPER" in useritems[1]:
-        ruby_chance = ruby_chance*1.6
-      if "DECENT" in useritems[1]:
-        ruby_chance = ruby_chance*1.7
-      if "STRONG" in useritems[1]:
-        ruby_chance = ruby_chance*1.8
-      if "POLISHED" in useritems[1]:
-        ruby_chance = ruby_chance*1.9
-      if "REFINED" in useritems[1]:
-        ruby_chance = ruby_chance*2
-    if "PX-JA" in useritems[1]:
-      jade_chance = jade_chance*2
-      if "GOOD" in useritems[1]:
-        jade_chance = jade_chance*1.5
-      if "PROPER" in useritems[1]:
-        jade_chance = jade_chance*1.6
-      if "DECENT" in useritems[1]:
-        jade_chance = jade_chance*1.7
-      if "STRONG" in useritems[1]:
-        jade_chance = jade_chance*1.8
-      if "POLISHED" in useritems[1]:
-        jade_chance = jade_chance*1.9
-      if "REFINED" in useritems[1]:
-        jade_chance = jade_chance*2
-    if "PX-OP" in useritems[1]:
-      opal_chance = opal_chance*2
-      if "GOOD" in useritems[1]:
-        opal_chance = opal_chance*1.5
-      if "PROPER" in useritems[1]:
-        opal_chance = opal_chance*1.6
-      if "DECENT" in useritems[1]:
-        opal_chance = opal_chance*1.7
-      if "STRONG" in useritems[1]:
-        opal_chance = opal_chance*1.8
-      if "POLISHED" in useritems[1]:
-        opal_chance = opal_chance*1.9
-      if "REFINED" in useritems[1]:
-        opal_chance = opal_chance*2 
-      if "PERFECT" in useritems[1]:
-        opal_chance = opal_chance*3 
-    if "PX-AM" in useritems[1]:
-      amethyst_chance = amethyst_chance*2
-      if "GOOD" in useritems[1]:
-        amethyst_chance = amethyst_chance*1.5
-      if "PROPER" in useritems[1]:
-        amethyst_chance = amethyst_chance*1.6
-      if "DECENT" in useritems[1]:
-        amethyst_chance = amethyst_chance*1.7
-      if "STRONG" in useritems[1]:
-        amethyst_chance = amethyst_chance*1.8
-      if "POLISHED" in useritems[1]:
-        amethyst_chance = amethyst_chance*1.9
-      if "REFINED" in useritems[1]:
-        amethyst_chance = amethyst_chance*2 
-      if "PERFECT" in useritems[1]:
-        amethyst_chance = amethyst_chance*3 
-    if "PX-TO" in useritems[1]:
-      topaz_chance = topaz_chance*2
-      if "GOOD" in useritems[1]:
-        topaz_chance = topaz_chance*1.5
-      if "PROPER" in useritems[1]:
-        topaz_chance = topaz_chance*1.6
-      if "DECENT" in useritems[1]:
-        topaz_chance = topaz_chance*1.7
-      if "STRONG" in useritems[1]:
-        topaz_chance = topaz_chance*1.8
-      if "POLISHED" in useritems[1]:
-        topaz_chance = topaz_chance*1.9
-      if "REFINED" in useritems[1]:
-        topaz_chance = topaz_chance*2 
-      if "PERFECT" in useritems[1]:
-        topaz_chance = topaz_chance*3 
-    if "PX-ON" in useritems[1]:
-      onyx_chance = onyx_chance*2
-      if "GOOD" in useritems[1]:
-        onyx_chance = onyx_chance*1.5
-      if "PROPER" in useritems[1]:
-        onyx_chance = onyx_chance*1.6
-      if "DECENT" in useritems[1]:
-        onyx_chance = onyx_chance*1.7
-      if "STRONG" in useritems[1]:
-        onyx_chance = onyx_chance*1.8
-      if "POLISHED" in useritems[1]:
-        onyx_chance = onyx_chance*1.9
-      if "REFINED" in useritems[1]:
-        onyx_chance = onyx_chance*2 
-      if "PERFECT" in useritems[1]:
-        onyx_chance = onyx_chance*3 
-    if "PX-IC" in useritems[1]:
-      ic_chance = ic_chance*2
-      if "GOOD" in useritems[1]:
-        ic_chance = ic_chance*1.5
-      if "PROPER" in useritems[1]:
-        ic_chance = ic_chance*1.6
-      if "DECENT" in useritems[1]:
-        ic_chance = ic_chance*1.7
-      if "STRONG" in useritems[1]:
-        ic_chance = ic_chance*1.8
-      if "POLISHED" in useritems[1]:
-        ic_chance = ic_chance*1.9
-      if "REFINED" in useritems[1]:
-        ic_chance = ic_chance*2 
-      if "PERFECT" in useritems[1]:
-        ic_chance = ic_chance*3 
-    if "PX-A" == useritems[1]:
-      iron_chance = iron_chance*1.75
-      gold_chance = gold_chance*1.75
-      diamond_chance = diamond_chance*1.75
-      emerald_chance = emerald_chance*1.75
-      sapphire_chance = sapphire_chance*1.75
-      ruby_chance =  ruby_chance*1.75
-      jade_chance = jade_chance*1.75
-      opal_chance = opal_chance*1.75
-      amethyst_chance = amethyst_chance*1.75
-      topaz_chance = topaz_chance*1.75
-      onyx_chance = onyx_chance*1.75
-      ic_chance = ic_chance*1.75
-    if "PX-X2" == useritems[1]:
-      iron_chance = iron_chance*0.75
-      gold_chance = gold_chance*0.75
-      diamond_chance = diamond_chance*0.75
-      emerald_chance = emerald_chance*0.75
-      sapphire_chance = sapphire_chance*0.75
-      ruby_chance =  ruby_chance*0.75
-      jade_chance = jade_chance*0.75
-      opal_chance = opal_chance*0.75
-      amethyst_chance = amethyst_chance*0.75
-      topaz_chance = topaz_chance*0.75
-      onyx_chance = onyx_chance*0.75
-      ic_chance = ic_chance*0.75
-      double_drop_chance = 1
-    if "PX-1A" == useritems[1]:
-      iron_chance = iron_chance*5
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1B" == useritems[1]:
-      iron_chance = 0
-      gold_chance = gold_chance*5
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1C" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = diamond_chance*5
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1D" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = emerald_chance*5
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1E" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = sapphire_chance*5
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1F" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance = ruby_chance*5
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1G" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = jade_chance*5
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1H" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = opal_chance*5
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1I" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = amethyst_chance*5
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1J" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = topaz_chance*5
-      onyx_chance = 0
-      ic_chance = 0
-    if "PX-1K" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = onyx_chance*5
-      ic_chance = 0
-    if "PX-1L" == useritems[1]:
-      iron_chance = 0
-      gold_chance = 0
-      diamond_chance = 0
-      emerald_chance = 0
-      sapphire_chance = 0
-      ruby_chance =  0
-      jade_chance = 0
-      opal_chance = 0
-      amethyst_chance = 0
-      topaz_chance = 0
-      onyx_chance = 0
-      ic_chance = ic_chance*5
-    if "PX-T" == useritems[1]:
-      token_chance = 0.000025
-  if str(message.channel) not in channelcheck:
-    if random.random() < token_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a token!**")
-      await message.channel.send(f"*PRAY TO RNGESUS DROP!* **{mention} just found a token!**")
-      user = int(message.author.id)
-      update_tokendatabase(user,1)
-    if random.random() < ic_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found AN INVISIBLE CRYSTAL!**")
-      await message.channel.send(f"*PRAY TO RNGESUS DROP!* **{mention} just found AN INVISIBLE CRYSTAL!**")
-      user = int(message.author.id)
-      point = 1
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found AN INVISIBLE CRYSTAL!**")
-        await message.channel.send(f"*PRAY TO RNGESUS DROP!* **{mention} just found AN INVISIBLE CRYSTAL!**")
-    if random.random() < onyx_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found an Onyx!**")
-      await message.channel.send(f"*CRAZY RARE DROP!* **{mention} just found an Onyx!**")
-      user = int(message.author.id)
-      point = 2
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found an Onyx!**")
-        await message.channel.send(f"*CRAZY RARE DROP!* **{mention} just found an Onyx!**")
-    if random.random() < topaz_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a Topaz!**")
-      await message.channel.send(f"*CRAZY RARE DROP!* **{mention} just found a Topaz!**")
-      user = int(message.author.id)
-      point = 3
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found a Topaz!**")
-        await message.channel.send(f"*CRAZY RARE DROP!* **{mention} just found a Topaz!**")
-    if random.random() < amethyst_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found an Amethyst!**")
-      user = int(message.author.id)
-      point = 4
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found an Amethyst!**")
-    if random.random() < opal_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found an Opal!**")
-      user = int(message.author.id)
-      point = 5
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found an Opal!**")
-    if random.random() < jade_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a Jade!**")
-      user = int(message.author.id)
-      point = 6
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found a Jade!**")
-    if random.random() < ruby_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a Ruby!**")
-      user = int(message.author.id)
-      point = 7
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found a Ruby!**")
-    if random.random() < sapphire_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a Sapphire!**")
-      user = int(message.author.id)
-      point = 8
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found a Sapphire!**")
-    if random.random() < emerald_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found an Emerald.**")
-      user = int(message.author.id)
-      point = 9
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found an Emerald.**")
-    if random.random() < diamond_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found a Diamond.**")
-      user = int(message.author.id)
-      point = 10
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found a Diamond.**")
-    if random.random() < gold_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found some gold.**")
-      user = int(message.author.id)
-      point = 11
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found some gold.**")
-    if random.random() < iron_chance:
-      mention = message.author.mention
-      username = str(message.author)
-      await channel.send(f"**{username} just found some iron.**")
-      user = int(message.author.id)
-      point = 12
-      update_database(user, point)
-      if random.random() < double_drop_chance:
-        update_database(user, point)
-        await channel.send(f"**{username} just found some iron.**")
 
-#running bot forever
+  # process commands so that commands can work
+  await bot.process_commands(message) 
+
+  # set this as a logs channel for every single gem that is found by any user
+  channel = bot.get_channel(890817521152843786) 
+
+  # set this as channels that the bot cannot access to check for user message
+  channelcheck = ["bot_commands", "server-logs", "message-logs", 
+                  "member-logs", "welcome-logs", "management", "music"]
+  
+  # rng is the chance that will be rolled for each corresponding gem in rolled_gem when a user sends a message
+  rng = [
+    0.00001, 0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 
+    0.01, 0.025, 0.05, 0.1, 0.25, 0, 0
+  ]
+  rolled_gem = [
+      "Invisible Crystal", "Onyx", "Topaz", "Amethyst", "Opal", "Jade", "Ruby",
+      "Sapphire", "Emerald", "Diamond", "Gold", "Iron", "Token", "Double"
+  ]
+
+  # key = base name of pickaxe, value = corresponding index of gem
+  pickaxe_rng_index = {
+      "PX-IR": 11,
+      "PX-GO": 10,
+      "PX-DI": 9,
+      "PX-EM": 8,
+      "PX-SA": 7,
+      "PX-RU": 6,
+      "PX-JA": 5,
+      "PX-OP": 4,
+      "PX-AM": 3,
+      "PX-TO": 2,
+      "PX-ON": 1,
+      "PX-IC": 0
+  }
+
+  # the chance of each gem to be rolled will be increased by any equipped pickaxe and its reforge will apply an additional multiplier, where the key = name of reforge and value = multiplier
+  multiplier = {
+      "GOOD": 1.5,
+      "PROPER": 1.6,
+      "DECENT": 1.7,
+      "STRONG": 1.8,
+      "POLISHED": 1.9,
+      "REFINED": 2,
+      "PERFECT": 3
+  }
+
+  user = str(message.author.id)
+
+  # if the user has at least 1 item, set the first item to be the equipped_item
+  if user in db["item"].keys():
+    equipped_item = db["item"][user][0]
+
+    # add multiplier to rng for PX-GEM
+    original_name = equipped_item
+    for reforge, multiply in multiplier.items():
+      if reforge in equipped_item:
+        # set original_name to be base pickaxe name by removing the reforge
+        original_name = equipped_item[equipped_item.index("-") + 1:len(equipped_item)]
+        # add the multiplier for the reforge
+        rng[pickaxe_rng_index[original_name]] *= multiply
+        # add the multiplier for the base pickaxe  
+        rng[pickaxe_rng_index[original_name]] *= 2
+        break
+        
+    # add multiplier to rng for special pickaxes
+    if equipped_item == "PX-A":
+      # increase chance to find each gem by 1.75 except tokens
+      for i in range(12):
+        rng[i] *= 1.75
+        
+    if equipped_item == "PX-X2":
+      # decrease chance to find each gem by 0.75 but add 100% chance to get double drops
+      for i in range(12):
+        rng[i] *= 0.75
+      rng[13] = 1
+
+    elif "PX-1" in equipped_item:
+      # key = letter representing gem, where A is iron and L is Invisible Crystal, value = its corresponding index in rng
+      alphabetindex = {
+          "A": 11,
+          "B": 10,
+          "C": 9,
+          "D": 8,
+          "E": 7,
+          "F": 6,
+          "G": 5,
+          "H": 4,
+          "I": 3,
+          "J": 2,
+          "K": 1,
+          "L": 0
+      }
+      
+      # apply the increased chances only if $set_gem has been used on PX-1
+      if len(equipped_item) == 5:
+        last_char = equipped_item[-1]
+        # set pickaxe to only be able to find the specified gem, but at a higher chance
+        for i in range(len(rng)):
+          if i != alphabetindex[last_char]:
+            rng[i] = 0
+          else:
+            rng[i] *= 5
+
+    # decrease chance to find any gem to 0 but get the ability to find a token
+    elif equipped_item == "PX-T":
+      for i in range(12):
+        rng[i] = 0
+      rng[12] = 0.000025
+
+  # carry out the rng roll if user messages in an intended channel
+  if str(message.channel) not in channelcheck:
+    mention = message.author.mention
+    username = str(message.author)
+
+    # run the roll for each gem from index 0 to 12
+    for i in range(len(rng) - 1):
+      # custom rarity text that will appear in the same channel as the message sent
+      rarity_text = ""
+      rarity = ["*CRAZY RARE DROP!*", "*RARE DROP*"]
+
+      # user will get the gem being rolled if the random chance is lower than that of rng
+      if random.random() < rng[i]:
+        if i == 0 or i == 12:
+          rarity_text = rarity[0]
+        elif i >= 1 and i <= 3:
+          rarity_text = rarity[1]  
+
+        # send every gem rolled and received in the logs channel
+        await channel.send(f"**{username} just found x1 {rolled_gem[i]}!**")
+        update_gemstone_database(user, i, 1)
+
+        # if gem rolled is a rare drop, announce in the channel where user sent the message
+        if rarity_text != "":
+          await message.channel.send(f"{rarity_text} **{mention} just found x1 {rolled_gem[i]}!**")
+
+        # roll the double drop chance
+        if random.random() < rng[13]:
+          await channel.send(f"**{username} found a second {rolled_gem[i]}!**")
+          await message.channel.send(f"**{mention} found a second {rolled_gem[i]}!**")
+          update_gemstone_database(user, i, 1)
+
+# make the bot alive even when no request is sent to the bot
 keep_alive()
+
+# set token in secrets and run the bot
 bot.run(os.getenv('TOKEN'))
