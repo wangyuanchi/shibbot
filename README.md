@@ -1,4 +1,7 @@
 # Shibbot
+
+![bot_icon_small.png](bot_icon_small.png)
+
 ## Description
 Shibbot is a simple discord bot that rewards users for being active by chatting in a server. 
 
