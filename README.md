@@ -3,8 +3,8 @@
 ## About
 Shibbot is a simple discord bot that rewards users for being active through chatting in a server. 
 
-- Everytime a user sends a message, there is a chance for the user to receive different gems with different rarities.
-- The user can spend the gems as currency to buy and upgrade pickaxes which increase their chance to find more gems.
+- Everytime a user sends a message, there's a chance for them to receive different gems with different rarities.
+- The user can spend it as currency to buy and upgrade pickaxes which increase their chance to find more gems.
 - There are different leaderboards for users to compare their collections and networth.
 
 <!--
