@@ -3,20 +3,6 @@
 ## About
 Shibbot is a simple discord bot that rewards users for being active through chatting in a server. 
 
-- Everytime a user sends a message, there's a chance for them to receive different gems with different rarities.
-- The user can spend it as currency to buy and upgrade pickaxes which increase their chance to find more gems.
-- There are different leaderboards for users to compare their collections and networth.
-
-<!--
-## Set-up Instructions
-1. Go to https://discord.com/developers/applications/, create a new discord bot and add it to a server
-2. Go to https://replit.com/ and add the files to a new project
-3. Generate a new discord bot token and add it as a new secret in replit
-   - ` SECRET_KEY = TOKEN `
-4. Go to https://uptimerobot.com/ and add the url of the web server under a new monitor
-5. Change line 52 to user_id of an admin and line 712 to a logs channel in the server
-   - `if ctx.author.id != 315107540138721280:`
-   - `channel = bot.get_channel(890817521152843786)`
-6. Create the empty databases
-   - `db["gemstone"] = {}, db["item"] = {}`  
--->
+- Every time a user sends a message, there's a chance they’ll receive gems of varying rarities.
+- Users can spend gems as currency to buy and upgrade pickaxes, which further increase their chances.
+- There are different leaderboards for users to compare their collections and net worth.
